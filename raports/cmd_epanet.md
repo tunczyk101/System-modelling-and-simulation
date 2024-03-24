@@ -1,5 +1,7 @@
 # Command Line EPANET
 
+## GitHub
+
 EPANET can be run as a console application using commandline.
 To use this version clone this [EPANET GitHub Repository](https://github.com/OpenWaterAnalytics/EPANET/tree/dev).
 
@@ -18,9 +20,11 @@ cmake --build . --config Release
 
 The `runepanet.exe` will be placed in the `build\bin\Release` (Windows) or `build\lib\Release` (Linux/Mac). More information: [Building EPANET](https://github.com/OpenWaterAnalytics/EPANET/blob/dev/BUILDING.md).
 
-In this case input network are placed into a text file and results are written also to the text file.
+## EPANET program
 
-To run cmd EPANET go to the directory in which EPANET is installed or add this directory to system PATH variable.
+Install [EPANET proogram](basic_information.md).
+
+In this case input network are placed into a text file and results are written also to the text file. To run cmd EPANET go to the directory in which EPANET is installed (or where you placed the repository). You can also add this directory to system PATH variable.
 
 ```cmd
 runepanet inpfile rptfile
