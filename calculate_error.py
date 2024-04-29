@@ -1,5 +1,9 @@
 import numpy as np
-from sklearn.metrics import mean_absolute_error, mean_squared_error
+from sklearn.metrics import (
+    mean_absolute_error,
+    mean_squared_error,
+    root_mean_squared_error,
+)
 
 
 def calculate_error(args, metric="mae"):
@@ -16,7 +20,7 @@ def calculate_error(args, metric="mae"):
         case "mae":
             error = mean_absolute_error(true_val, args)
         case "rmse":
-            error = mean_squared_error(true_val, args, squared=False) ** 0.5
+            error = root_mean_squared_error(true_val, args)
         case "mse":
             error = mean_squared_error(true_val, args)
         case _:
@@ -27,7 +31,7 @@ def calculate_error(args, metric="mae"):
 
 # example of use
 
-predicted_val = np.array([1.5, 2.0, 2.5, 4, 4, 8])
+predicted_val = np.array([1, 2.0, 2.5, 4, 5, 8])
 
 print("MAE:", calculate_error(predicted_val, metric="mae"))
 print("RMSE:", calculate_error(predicted_val, metric="rmse"))
