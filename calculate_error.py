@@ -33,6 +33,6 @@ def calculate_error(args, metric="mae"):
 
 predicted_val = np.array([1, 2.0, 2.5, 4, 5, 8])
 
-print("MAE:", calculate_error(predicted_val, metric="mae"))
-print("RMSE:", calculate_error(predicted_val, metric="rmse"))
-print("MSE:", calculate_error(predicted_val, metric="mse"))
+#print("MAE:", calculate_error(predicted_val, metric="mae"))
+#print("RMSE:", calculate_error(predicted_val, metric="rmse"))
+#print("MSE:", calculate_error(predicted_val, metric="mse"))
