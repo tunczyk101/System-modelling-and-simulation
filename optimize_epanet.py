@@ -100,7 +100,11 @@ def run_epanet_and_calculate_error(metric="mse"):
     :param metric: Name of the error metric ('mae' by default).
     :return: error -- The value of the calculated error metric.
     """
-    subprocess.run([runepanet, optimalize_model, optimalize_output], check=True, stdout=subprocess.DEVNULL)
+    subprocess.run(
+        [runepanet, optimalize_model, optimalize_output],
+        check=True,
+        stdout=subprocess.DEVNULL,
+    )
 
     # Read results from the report
     results_optimalize = get_simulation_results(optimalize_output)
@@ -113,7 +117,11 @@ def main(POPULATION, MAXITERATIONS, BOUNDS):
     """
     Main function to optimize EPANET model parameters.
     """
-    subprocess.run([runepanet, original_model, original_output], check=True, stdout=subprocess.DEVNULL)
+    subprocess.run(
+        [runepanet, original_model, original_output],
+        check=True,
+        stdout=subprocess.DEVNULL,
+    )
 
     open(RESULTS_FILE, "w").close()  # clean file with results
 
@@ -132,7 +140,7 @@ def main(POPULATION, MAXITERATIONS, BOUNDS):
     save_results(result)
 
     # save best results to json
-    with open('the_best.json', 'w') as result_file:
+    with open("the_best.json", "w") as result_file:
         json.dump(result.x, result_file)
 
     plot_results()

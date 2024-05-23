@@ -25,4 +25,4 @@ def plot_results(metric="mae"):
     plt.ylabel(metric.upper())
     plt.title("Results")
     plt.show()
-    plt.savefig('results.png')
+    plt.savefig("results.png")
