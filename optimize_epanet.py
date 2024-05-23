@@ -1,12 +1,15 @@
+import json
+
 from scipy.optimize import differential_evolution
 import subprocess
 import shutil
-from parse_output_file import get_simulation_results
+from file_parser.parse_output_file import get_simulation_results
 from calculate_error import calculate_error
+from iterations_results import RESULTS_FILE, save_results, plot_results
 
 JUNCTIONS_TO_ADJUST = [" SO/ZD", " SW/SO", " SW/RO", " SD/GO1", " SW/AN", " HP7"]
 PIPES_TO_ADJUST = [" p23", " p129", " p159"]
-runepanet = r"D:\EPANET 2.2\runepanet.exe"
+runepanet = r"runepanet"
 
 
 def update_epanet_file(filename, x):
@@ -35,9 +38,15 @@ def optimize_epanet(x):
 
     # Run EPANET and calculate error
     error = run_epanet_and_calculate_error(metric="mae")
-    print(error)
-    with open("error.txt", mode="a") as e:
-        e.write(str(str(error) + "\n"))
+
+    # print something like sniug counter
+    global counter
+    counter += 1
+    if counter % (len(BOUNDS) // 10) == 0:
+        print("#", end="")
+        if counter >= len(BOUNDS):
+            counter = 0
+            print(" | ", end="")
 
     return error
 
@@ -59,7 +68,7 @@ def add_report_section(original_model):
             if "[REPORT]" in line and report_line is None:
                 report_line = line
                 report_line_number = len(lines) - i
-            if report_line_number != None and end_line_number != None:
+            if report_line_number is not None and end_line_number is not None:
                 lines.reverse()
                 del lines[report_line_number : end_line_number + 1]
                 for j in JUNCTIONS_TO_ADJUST:
@@ -91,7 +100,7 @@ def run_epanet_and_calculate_error(metric="mse"):
     :param metric: Name of the error metric ('mae' by default).
     :return: error -- The value of the calculated error metric.
     """
-    subprocess.run([runepanet, optimalize_model, optimalize_output], check=True)
+    subprocess.run([runepanet, optimalize_model, optimalize_output], check=True, stdout=subprocess.DEVNULL)
 
     # Read results from the report
     results_optimalize = get_simulation_results(optimalize_output)
@@ -104,17 +113,29 @@ def main(POPULATION, MAXITERATIONS, BOUNDS):
     """
     Main function to optimize EPANET model parameters.
     """
-    subprocess.run([runepanet, original_model, original_output], check=True)
+    subprocess.run([runepanet, original_model, original_output], check=True, stdout=subprocess.DEVNULL)
 
-    differential_evolution(
+    open(RESULTS_FILE, "w").close()  # clean file with results
+
+    global counter
+    counter = 0
+
+    result = differential_evolution(
         optimize_epanet,
         BOUNDS,
         mutation=(0.6, 0.9),
         recombination=0.8,
         popsize=POPULATION,
         maxiter=MAXITERATIONS,
+        callback=save_results,
     )
-    return BOUNDS
+    save_results(result)
+
+    # save best results to json
+    with open('the_best.json', 'w') as result_file:
+        json.dump(result.x, result_file)
+
+    plot_results()
 
 
 # Copy model file
@@ -135,11 +156,9 @@ optimalize_output = "epanet_model/output_optimalize_values.txt"
 
 POPULATION = 40
 MAXITERATIONS = 10
+global BOUNDS
 BOUNDS = [(0, 5)] * (pipes_end - pipes_start)
 
 if __name__ == "__main__":
-    population_individuals = "population_individuals =  " + str(
-        (MAXITERATIONS + 1) * POPULATION * len(BOUNDS)
-    )
-    print(population_individuals)
+    print(f"population_individuals =  {(MAXITERATIONS + 1) * POPULATION * len(BOUNDS)}")
     main(POPULATION, MAXITERATIONS, BOUNDS)
