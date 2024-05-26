@@ -35,5 +35,6 @@ def plot_results(metric="mae"):
     plt.xlabel("Iteration")
     plt.ylabel(metric.upper())
     plt.title("Results")
-    plt.show()
     plt.savefig("results.png")
+    plt.show()
+

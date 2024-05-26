@@ -143,6 +143,8 @@ def main(POPULATION, MAXITERATIONS, BOUNDS):
         maxiter=MAXITERATIONS,
         callback=save_results,
         seed=42,
+        atol=0,
+        tol=0,
     )
     save_results(result)
 
@@ -174,7 +176,7 @@ shutil.copyfile(original_model, optimalize_model)
 original_output = "epanet_model/output_true_values.txt"
 optimalize_output = "epanet_model/output_optimalize_values.txt"
 
-POPULATION = 15
+POPULATION = 5
 MAXITERATIONS = 1000
 global BOUNDS
 BOUNDS = [(0, 6)] * (pipes_end - pipes_start) + [(0, 1)] * (junctions_end - junctions_start)
