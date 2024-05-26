@@ -22,6 +22,12 @@ def update_epanet_file(filename, x):
         lines[i] = lines[i].replace(
             "\t" + parts[5] + " ", "\t" + str(x[i - pipes_start]) + " "
         )
+    pipes_nr = pipes_end - pipes_start
+    for i in range(junctions_start, junctions_end):
+        parts = lines[i].split()
+        lines[i] = lines[i].replace(
+            "\t" + parts[1], "\t" + str(x[pipes_nr + i - junctions_start])
+        )
 
     # write back to file
     with open(filename, "w") as model_file:
@@ -136,14 +142,20 @@ def main(POPULATION, MAXITERATIONS, BOUNDS):
         popsize=POPULATION,
         maxiter=MAXITERATIONS,
         callback=save_results,
+        seed=42,
     )
     save_results(result)
 
-    # save best results to json
-    with open("the_best.json", "w") as result_file:
-        json.dump(result.x, result_file)
-
     plot_results()
+
+    try:
+        # save best results to json
+        with open("the_best.json", "w") as result_file:
+            json.dump([float(i) for i in result.x], result_file)
+    except:
+        with open("the_best.txt", "w") as result_file:
+            result_file.write(str(result.x))
+
 
 
 # Copy model file
@@ -152,8 +164,8 @@ add_report_section(original_model)
 
 with open(original_model) as model_file:
     lines = model_file.readlines()
-    junctions_start = lines.index("[JUNCTIONS]\n") + 2
-    junctions_end = lines.index("[RESERVOIRS]\n") - 1
+    junctions_start = lines.index("[EMITTERS]\n") + 2
+    junctions_end = lines.index("[QUALITY]\n") - 1
     pipes_start = lines.index("[PIPES]\n") + 2
     pipes_end = lines.index("[PUMPS]\n") - 1
 
@@ -162,11 +174,12 @@ shutil.copyfile(original_model, optimalize_model)
 original_output = "epanet_model/output_true_values.txt"
 optimalize_output = "epanet_model/output_optimalize_values.txt"
 
-POPULATION = 40
-MAXITERATIONS = 10
+POPULATION = 15
+MAXITERATIONS = 1000
 global BOUNDS
-BOUNDS = [(0, 5)] * (pipes_end - pipes_start)
+BOUNDS = [(0, 6)] * (pipes_end - pipes_start) + [(0, 1)] * (junctions_end - junctions_start)
 
 if __name__ == "__main__":
     print(f"population_individuals =  {(MAXITERATIONS + 1) * POPULATION * len(BOUNDS)}")
     main(POPULATION, MAXITERATIONS, BOUNDS)
+

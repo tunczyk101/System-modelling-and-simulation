@@ -1,3 +1,5 @@
+import json
+
 from scipy.optimize import OptimizeResult
 import matplotlib.pyplot as plt
 
@@ -9,6 +11,15 @@ def save_results(intermediate_result: OptimizeResult):
     print(f"Best: {intermediate_result.fun}")
     with open(RESULTS_FILE, "a") as result_file:
         result_file.write(f"{str(intermediate_result.fun)}\n")
+
+    with open("./best_iter_result.txt", "w") as f:
+        f.write(str(intermediate_result.x))
+
+    try:
+        with open("./best_iter_result.json", "w") as f:
+            json.dump([float(i) for i in intermediate_result.x], f)
+    except:
+        pass
 
 
 def plot_results(metric="mae"):
