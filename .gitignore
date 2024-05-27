@@ -2,4 +2,5 @@
 .ipynb_checkpoints
 .idea/
 __pycache__/
-/file_parser/data/
+/file_parser/notebooks/data/
+/epanet_model
