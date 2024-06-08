@@ -115,7 +115,6 @@ def run_epanet_and_calculate_error(metric="mse"):
     return error
 
 
-
 def checkBounds(min, max):
     def decorator(func):
         def wrapper(*args, **kargs):

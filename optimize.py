@@ -1,10 +1,16 @@
+import pickle
 import random
 import shutil
 
 from deap import creator, base, tools
 
 from iterations_results import save_single_results, RESULTS_FILE, plot_results
-from optimize_epanet import optimize_epanet
+from optimize_epanet import optimize_epanet, pipes_end, pipes_start
+
+POPULATION = 10
+MAXITERATIONS = 10000000
+checkpoint = False
+# checkpoint = "checkpoint_name.pkl"
 
 
 def check_bounds(minimum, maximum):
@@ -13,8 +19,10 @@ def check_bounds(minimum, maximum):
             offspring = func(*args, **kargs)
             for child in offspring:
                 for i in range(len(child)):
-                    if child[i] > maximum:
+                    if child[i] > maximum and i < pipes_end - pipes_start:
                         child[i] = maximum
+                    elif child[i] > 1 and i >= pipes_end - pipes_start:
+                        child[i] = 1
                     elif child[i] < minimum:
                         child[i] = minimum
             return offspring
@@ -42,9 +50,6 @@ def main():
     optimalize_model = "epanet_model/model_optimalize.inp"
     shutil.copyfile(original_model, optimalize_model)
 
-    POPULATION = 10
-    MAXITERATIONS = 10000000
-
     creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
     creator.create("Individual", list, fitness=creator.FitnessMin)
 
@@ -61,7 +66,20 @@ def main():
     toolbox.decorate("mate", check_bounds(0, 6))
     toolbox.decorate("mutate", check_bounds(0, 6))
 
-    pop = toolbox.population(n=POPULATION)
+    if checkpoint:
+        # A file name has been given, then load the data from the file
+        with open(checkpoint, "r") as cp_file:
+            cp = pickle.load(cp_file)
+        pop = cp["population"]
+        halloffame = cp["halloffame"]
+        logbook = cp["logbook"]
+        random.setstate(cp["rndstate"])
+    else:
+        # Start a new evolution
+        pop = toolbox.population(n=POPULATION)
+        halloffame = tools.HallOfFame(maxsize=1)
+        logbook = tools.Logbook()
+
     mate_probability = 0.5
     mutation_probability = 0.2
     best_offspring_results = 100
@@ -101,6 +119,14 @@ def main():
         best_offspring = min(pop, key=lambda x: x.fitness.values)
         save_single_results(best_offspring, best_offspring.fitness.values[0] < best_offspring_results)
         best_offspring_results = min(best_offspring.fitness.values[0], best_offspring_results)
+
+        if g % 100 == 0:
+            # Fill the dictionary using the dict(key=value[, ...]) constructor
+            cp = dict(population=pop, generation=g, halloffame=halloffame, logbook=logbook,
+                      rndstate=random.getstate())
+
+            with open("checkpoint_name.pkl", "wb") as cp_file:
+                pickle.dump(cp, cp_file)
 
     plot_results()
 
