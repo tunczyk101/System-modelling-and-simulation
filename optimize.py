@@ -1,3 +1,4 @@
+import copy
 import pickle
 import random
 import shutil
@@ -9,8 +10,10 @@ from optimize_epanet import optimize_epanet, pipes_end, pipes_start
 
 POPULATION = 10
 MAXITERATIONS = 10000000
-checkpoint = False
-# checkpoint = "checkpoint_name.pkl"
+# checkpoint = False
+checkpoint = "checkpoint_name1.pkl"
+mate_probability = 0.5
+mutation_probability = 0.3
 
 
 def check_bounds(minimum, maximum):
@@ -38,7 +41,7 @@ def main():
                 [toolbox.attr_float2() for _ in range(junctions_start, junctions_end)])
 
     original_model = "epanet_model/model_original.inp"
-    open(RESULTS_FILE, "w").close()  # clean file with results
+    # open(RESULTS_FILE, "w").close()  # clean file with results
 
     with open(original_model) as model_file:
         lines = model_file.readlines()
@@ -68,21 +71,22 @@ def main():
 
     if checkpoint:
         # A file name has been given, then load the data from the file
-        with open(checkpoint, "r") as cp_file:
+        print("start")
+        with open(checkpoint, "rb") as cp_file:
             cp = pickle.load(cp_file)
-        pop = cp["population"]
+        pop = cp["population"] + copy.deepcopy(cp["population"])
         halloffame = cp["halloffame"]
         logbook = cp["logbook"]
         random.setstate(cp["rndstate"])
+        best_offspring_results = min(pop, key=lambda x: x.fitness.values).fitness.values
     else:
         # Start a new evolution
         pop = toolbox.population(n=POPULATION)
         halloffame = tools.HallOfFame(maxsize=1)
         logbook = tools.Logbook()
+        best_offspring_results = 100
 
-    mate_probability = 0.5
-    mutation_probability = 0.2
-    best_offspring_results = 100
+
 
     # Evaluate the entire population
     fitnesses = list(map(toolbox.evaluate, pop))
