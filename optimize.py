@@ -10,8 +10,8 @@ from optimize_epanet import optimize_epanet, pipes_end, pipes_start
 
 POPULATION = 10
 MAXITERATIONS = 10000000
-# checkpoint = False
-checkpoint = "checkpoint_name1.pkl"
+checkpoint = False
+# checkpoint = "checkpoint_name1.pkl"
 mate_probability = 0.5
 mutation_probability = 0.3
 
@@ -74,7 +74,7 @@ def main():
         print("start")
         with open(checkpoint, "rb") as cp_file:
             cp = pickle.load(cp_file)
-        pop = cp["population"] + copy.deepcopy(cp["population"])
+        pop = cp["population"]
         halloffame = cp["halloffame"]
         logbook = cp["logbook"]
         random.setstate(cp["rndstate"])
