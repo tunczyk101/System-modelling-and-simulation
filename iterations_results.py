@@ -1,5 +1,6 @@
 import json
 
+import deap
 #from scipy.optimize import OptimizeResult
 import matplotlib.pyplot as plt
 from deap import tools
@@ -8,7 +9,7 @@ from deap import tools
 RESULTS_FILE = "./results.txt"
 
 
-def save_results(population):
+def save_results(population,):
     best_ind = tools.selBest(population, k=1)[0]
     print(f"Best: {best_ind.fitness.values[0]}")
     with open(RESULTS_FILE, "a") as result_file:
@@ -22,6 +23,23 @@ def save_results(population):
             json.dump([float(i) for i in best_ind], f)
     except:
         pass
+
+
+def save_single_results(best_offspring, save):
+    best = best_offspring.fitness.values[0]
+    best_genom = list(best_offspring)
+    print(f"Best: {best}")
+    with open(RESULTS_FILE, "a") as result_file:
+        result_file.write(f"{str(best)}\n")
+
+    if save:
+        with open("./best_iter_result.txt", "w") as f:
+            f.write(str(best_genom))
+        try:
+            with open("./best_iter_result.json", "w") as f:
+                json.dump([float(i) for i in best_genom], f)
+        except:
+            pass
 
 
 def plot_results(metric="mae"):

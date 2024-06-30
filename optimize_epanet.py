@@ -35,7 +35,10 @@ def update_epanet_file(filename, x):
     with open(filename, "w") as model_file:
         model_file.writelines(lines)
 
+
 counter = 0
+
+
 def optimize_epanet(x):
     """
     Optimize EPANET model by adjusting junction and pipe values.
@@ -46,15 +49,6 @@ def optimize_epanet(x):
 
     # Run EPANET and calculate error
     error = run_epanet_and_calculate_error(metric="mae")
-
-    # print something like sniug counter
-    global counter
-    counter += 1
-    if counter % (len(BOUNDS) // 10) == 0:
-        print("#", end="")
-        if counter >= len(BOUNDS):
-            counter = 0
-            print(" | ", end="")
 
     return error,
 
@@ -78,7 +72,7 @@ def add_report_section(original_model):
                 report_line_number = len(lines) - i
             if report_line_number is not None and end_line_number is not None:
                 lines.reverse()
-                del lines[report_line_number : end_line_number + 1]
+                del lines[report_line_number: end_line_number + 1]
                 for j in JUNCTIONS_TO_ADJUST:
                     nodes += j
                 for n in PIPES_TO_ADJUST:
@@ -121,48 +115,23 @@ def run_epanet_and_calculate_error(metric="mse"):
     return error
 
 
-'''def main(POPULATION, MAXITERATIONS, BOUNDS):
-    """
-    Main function to optimize EPANET model parameters.
-    """
-    subprocess.run(
-        [runepanet, original_model, original_output],
-        check=True,
-        stdout=subprocess.DEVNULL,
-    )
+def checkBounds(min, max):
+    def decorator(func):
+        def wrapper(*args, **kargs):
+            offspring = func(*args, **kargs)
+            for child in offspring:
+                for i in range(len(child)):
+                    if child[i] > max:
+                        child[i] = max
+                    elif child[i] < min:
+                        child[i] = min
+            return offspring
 
-    open(RESULTS_FILE, "w").close()  # clean file with results
+        return wrapper
 
-    global counter
-    counter = 0
-
-    result = differential_evolution(
-        optimize_epanet,
-        BOUNDS,
-        mutation=(0.6, 0.9),
-        recombination=0.8,
-        popsize=POPULATION,
-        maxiter=MAXITERATIONS,
-        callback=save_results,
-        seed=42,
-        atol=0,
-        tol=0,
-    )
-    save_results(result)
-
-    plot_results()
-
-    try:
-        # save best results to json
-        with open("the_best.json", "w") as result_file:
-            json.dump([float(i) for i in result.x], result_file)
-    except:
-        with open("the_best.txt", "w") as result_file:
-            result_file.write(str(result.x))
-'''
+    return decorator
 
 
-# Copy model file
 original_model = "epanet_model/model_original.inp"
 add_report_section(original_model)
 
@@ -177,75 +146,3 @@ optimalize_model = "epanet_model/model_optimalize.inp"
 shutil.copyfile(original_model, optimalize_model)
 original_output = "epanet_model/output_true_values.txt"
 optimalize_output = "epanet_model/output_optimalize_values.txt"
-
-POPULATION = 5
-MAXITERATIONS = 1000
-global BOUNDS
-BOUNDS = [(0, 6)] * (pipes_end - pipes_start) + [(0, 1)] * (junctions_end - junctions_start)
-
-'''if __name__ == "__main__":
-    print(f"population_individuals =  {(MAXITERATIONS + 1) * POPULATION * len(BOUNDS)}")
-    main(POPULATION, MAXITERATIONS, BOUNDS)'''
-
-creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
-creator.create("Individual", list, fitness=creator.FitnessMin)
-
-
-
-toolbox = base.Toolbox()
-toolbox.register("attr_float", random.uniform, 0, 6)  # For pipes
-toolbox.register("attr_float2", random.uniform, 0, 1)  # For junctions
-
-def create_individual():
-    return ([toolbox.attr_float() for _ in range(pipes_start, pipes_end)] +
-            [toolbox.attr_float2() for _ in range(junctions_start, junctions_end)])
-
-toolbox.register("individual", tools.initIterate, creator.Individual, create_individual)
-toolbox.register("population", tools.initRepeat, list, toolbox.individual)
-toolbox.register("evaluate", optimize_epanet)
-toolbox.register("mate", tools.cxBlend, alpha=0.5)
-toolbox.register("mutate", tools.mutPolynomialBounded, eta=0.5, low=0, up=6, indpb=0.1)
-toolbox.register("select", tools.selBest)
-
-def checkBounds(min, max):
-    def decorator(func):
-        def wrapper(*args, **kargs):
-            offspring = func(*args, **kargs)
-            for child in offspring:
-                for i in range(len(child)):
-                    if child[i] > max:
-                        child[i] = max
-                    elif child[i] < min:
-                        child[i] = min
-            return offspring
-        return wrapper
-    return decorator
-
-# Zastosuj dekorator do operatorów mutacji i krzyżowania
-toolbox.decorate("mate", checkBounds(0, 6))
-toolbox.decorate("mutate", checkBounds(0, 6))
-
-
-population = toolbox.population(n=POPULATION)
-
-
-
-# Pętla ewolucyjna
-NGEN=MAXITERATIONS
-for gen in range(NGEN):
-    offspring = algorithms.varAnd(population, toolbox, cxpb=0.5, mutpb=0.1)
-    fits = toolbox.map(toolbox.evaluate, offspring)
-    for fit, ind in zip(fits, offspring):
-        ind.fitness.values = fit
-    population = toolbox.select(offspring, k=len(population))
-    # Zapisz najlepszą jednostkę i jej wartość fitness do pliku
-    best_ind = tools.selBest(population, k=1)[0]
-    with open('best_individuals.txt', 'a') as f:
-        f.write('Generation {}: Best individual: {}\n'.format(gen, best_ind.fitness.values[0]))
-    print("Generation {}: Best fitness: {}".format(gen, best_ind.fitness.values[0]))
-top10 = tools.selBest(population, k=10)
-
-
-# Save results
-save_results(top10)
-plot_results(RESULTS_FILE)
