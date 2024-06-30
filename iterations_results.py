@@ -1,23 +1,25 @@
 import json
 
-from scipy.optimize import OptimizeResult
+#from scipy.optimize import OptimizeResult
 import matplotlib.pyplot as plt
+from deap import tools
 
 
 RESULTS_FILE = "./results.txt"
 
 
-def save_results(intermediate_result: OptimizeResult):
-    print(f"Best: {intermediate_result.fun}")
+def save_results(population):
+    best_ind = tools.selBest(population, k=1)[0]
+    print(f"Best: {best_ind.fitness.values[0]}")
     with open(RESULTS_FILE, "a") as result_file:
-        result_file.write(f"{str(intermediate_result.fun)}\n")
+        result_file.write(f"{str(best_ind.fitness.values[0])}\n")
 
     with open("./best_iter_result.txt", "w") as f:
-        f.write(str(intermediate_result.x))
+        f.write(str(best_ind))
 
     try:
         with open("./best_iter_result.json", "w") as f:
-            json.dump([float(i) for i in intermediate_result.x], f)
+            json.dump([float(i) for i in best_ind], f)
     except:
         pass
 
